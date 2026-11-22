@@ -14,10 +14,6 @@ venv/
 # MLflow
 mlruns/
 
-# Data
-data/*
-!data/.gitkeep
-
 # DVC cache
 .dvc/cache/
 
