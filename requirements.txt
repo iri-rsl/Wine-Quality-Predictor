@@ -1,0 +1,11 @@
+pandas
+numpy
+scikit-learn
+datasets
+mlflow
+dvc[azure]
+fastapi
+uvicorn
+pytest
+httpx
+ruff
