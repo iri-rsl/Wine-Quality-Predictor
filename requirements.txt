@@ -9,3 +9,6 @@ uvicorn
 pytest
 httpx
 ruff
+
+huggingface_hub
+fsspec
