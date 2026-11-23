@@ -81,8 +81,8 @@ dvc pull
 | Source file | `wine/train.csv` |
 | Source revision | To be recorded |
 | Random seed | `42` |
-| Git commit SHA | To be recorded |
-| DVC hash | To be recorded |
+| Git commit SHA | 31661997737f99ac474a1db2ca3ad5e378c8ed10 |
+| DVC hash | c7d9fe8d4f7e02a6f841b8afa67c9fc0.dir |
 
 Each released dataset version must be identifiable through its corresponding Git commit/tag and DVC metadata.
 
