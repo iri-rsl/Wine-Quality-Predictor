@@ -27,3 +27,6 @@ Thumbs.db
 
 # Generated datasets (tracked by DVC)
 data/processed/
+
+# Local MLflow database
+mlflow.db

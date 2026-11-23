@@ -14,3 +14,5 @@ huggingface_hub
 fsspec
 
 python-dotenv
+
+xgboost
