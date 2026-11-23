@@ -14,10 +14,6 @@ venv/
 # MLflow
 mlruns/
 
-# Data
-data/*
-!data/.gitkeep
-
 # DVC cache
 .dvc/cache/
 
@@ -28,3 +24,9 @@ data/*
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated datasets (tracked by DVC)
+data/processed/
+
+# Local MLflow database
+mlflow.db
