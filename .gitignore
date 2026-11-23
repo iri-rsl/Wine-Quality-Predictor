@@ -24,3 +24,6 @@ mlruns/
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated datasets (tracked by DVC)
+data/processed/

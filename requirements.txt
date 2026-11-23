@@ -12,3 +12,5 @@ ruff
 
 huggingface_hub
 fsspec
+
+python-dotenv
