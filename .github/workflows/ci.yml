@@ -6,9 +6,6 @@ on:
       - dev
       - staging
       - main
-  push:
-    branches:
-      - dev
 
 permissions:
   contents: read
