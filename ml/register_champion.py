@@ -3,7 +3,6 @@ from mlflow.tracking import MlflowClient
 
 from ml.train import setup_mlflow
 
-
 RUN_ID = "d1b5d7e2c48347aea30b0da19abaff19"
 MODEL_NAME = "WineQualityPredictor"
 
