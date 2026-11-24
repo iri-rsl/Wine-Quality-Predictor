@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+/wine_quality_prediction.egg-info/
 
 # IDE
 .vscode/
