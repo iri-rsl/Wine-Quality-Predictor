@@ -6,6 +6,7 @@ venv/
 
 # IDE
 .vscode/
+.idea/
 
 # Environment variables and secrets
 .env
