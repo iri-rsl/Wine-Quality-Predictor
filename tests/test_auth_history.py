@@ -30,7 +30,8 @@ def test_duplicate_username_is_case_insensitive(client, make_user):
 
 
 @pytest.mark.parametrize(
-    "username,password", [("ab", "long-enough"), ("bad name", "long-enough"), ("alice", "short"), ("a" * 33, "long-enough")]
+    "username,password",
+    [("ab", "long-enough"), ("bad name", "long-enough"), ("alice", "short"), ("a" * 33, "long-enough")],
 )
 def test_signup_validation(client, username, password):
     assert client.post("/auth/signup", json={"username": username, "password": password}).status_code == 422
@@ -54,7 +55,10 @@ def test_invalid_token_on_predict_is_rejected(client, wine):
 
 def test_history_records_authenticated_predictions_newest_first(client, make_user, wine):
     headers = make_user()
-    ids = [client.post("/predict", json=dict(wine, alcohol=a), headers=headers).json()["prediction_id"] for a in (9, 11, 13)]
+    ids = [
+        client.post("/predict", json=dict(wine, alcohol=a), headers=headers).json()["prediction_id"]
+        for a in (9, 11, 13)
+    ]
     assert all(isinstance(i, int) for i in ids)
     items = client.get("/history", headers=headers).json()
     assert [i["id"] for i in items] == ids[::-1]

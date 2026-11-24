@@ -117,8 +117,10 @@ def create_app(settings: Settings | None = None, loader=None) -> FastAPI:
     @app.post("/admin/reload-model", response_model=ModelInfo, tags=["model"])
     def reload_model(x_admin_token: Annotated[str | None, Header()] = None):
         """Re-resolve the alias and load the new version. Called by CT after a promotion."""
-        if not settings.admin_token or not x_admin_token or not secrets.compare_digest(
-            x_admin_token, settings.admin_token
+        if (
+            not settings.admin_token
+            or not x_admin_token
+            or not secrets.compare_digest(x_admin_token, settings.admin_token)
         ):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
         if not manager.load():

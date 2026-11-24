@@ -55,11 +55,7 @@ def remove_cross_split_duplicates(train, validation, test):
 
     validation_keys = pd.util.hash_pandas_object(validation[columns], index=False)
 
-    validation = (
-        validation[~validation_keys.isin(test_keys)]
-        .drop_duplicates(subset=columns)
-        .copy()
-    )
+    validation = validation[~validation_keys.isin(test_keys)].drop_duplicates(subset=columns).copy()
 
     validation_keys = set(pd.util.hash_pandas_object(validation[columns], index=False))
 
@@ -121,10 +117,7 @@ def main():
         print(f"{version.upper()}")
 
         for split_name, split_df in splits.items():
-            print(
-                f"  {split_name}: {len(split_df)} rows "
-                f"({split_df.duplicated().sum()} duplicates)"
-            )
+            print(f"  {split_name}: {len(split_df)} rows ({split_df.duplicated().sum()} duplicates)")
 
         print()
 

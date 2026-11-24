@@ -22,9 +22,7 @@ def make_run(
 
 
 @pytest.mark.parametrize("model_type", [None, "xgboost"])
-def test_register_initial_champion_registers_model_and_assigns_alias(
-    monkeypatch, capsys, model_type
-):
+def test_register_initial_champion_registers_model_and_assigns_alias(monkeypatch, capsys, model_type):
     run = make_run(model_type=model_type)
     client = Mock()
     client.get_run.return_value = run
@@ -96,9 +94,7 @@ def test_register_initial_champion_registers_model_and_assigns_alias(
         ),
     ],
 )
-def test_register_initial_champion_rejects_invalid_run(
-    monkeypatch, run, expected_message
-):
+def test_register_initial_champion_rejects_invalid_run(monkeypatch, run, expected_message):
     client = Mock()
     client.get_run.return_value = run
     register_model = Mock()

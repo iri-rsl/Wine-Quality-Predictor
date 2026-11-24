@@ -4,7 +4,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from ml.promotion import MAX_MAE, MAX_RMSE, MIN_MAE_IMPROVEMENT, promote_if_passing, should_promote
+from ml.promotion import (
+    MAX_MAE,
+    MAX_RMSE,
+    MIN_MAE_IMPROVEMENT,
+    promote_if_passing,
+    should_promote,
+)
 
 CHAMPION = {"mae": 0.54, "rmse": 0.69}
 

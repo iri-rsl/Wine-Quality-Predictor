@@ -17,12 +17,8 @@ def test_load_data_reads_train_and_validation_splits(tmp_path, monkeypatch):
     version_dir = tmp_path / "v1"
     version_dir.mkdir()
 
-    pd.DataFrame({"alcohol": [10.0, 11.0], "quality": [5, 6]}).to_csv(
-        version_dir / "train.csv", index=False
-    )
-    pd.DataFrame({"alcohol": [12.0], "quality": [7]}).to_csv(
-        version_dir / "validation.csv", index=False
-    )
+    pd.DataFrame({"alcohol": [10.0, 11.0], "quality": [5, 6]}).to_csv(version_dir / "train.csv", index=False)
+    pd.DataFrame({"alcohol": [12.0], "quality": [7]}).to_csv(version_dir / "validation.csv", index=False)
 
     monkeypatch.setattr(training, "DATA_DIR", tmp_path)
 
@@ -96,9 +92,7 @@ def test_get_dvc_hash_reads_hash_from_dvc_file(tmp_path, monkeypatch):
         "outs:\n- md5: NOT_A_HASH\n",
     ],
 )
-def test_get_dvc_hash_returns_unknown_when_hash_is_unavailable(
-    tmp_path, monkeypatch, file_content
-):
+def test_get_dvc_hash_returns_unknown_when_hash_is_unavailable(tmp_path, monkeypatch, file_content):
     data_dir = tmp_path / "data"
     data_dir.mkdir()
 
@@ -174,11 +168,7 @@ def test_train_fits_model_and_logs_results(monkeypatch, model_name, model_logger
     monkeypatch.setattr(
         training.mlflow,
         "start_run",
-        Mock(
-            return_value=nullcontext(
-                SimpleNamespace(info=SimpleNamespace(run_id="run-id"))
-            )
-        ),
+        Mock(return_value=nullcontext(SimpleNamespace(info=SimpleNamespace(run_id="run-id")))),
     )
     monkeypatch.setattr(training.mlflow, "log_params", Mock())
     monkeypatch.setattr(training.mlflow, "log_metrics", Mock())
@@ -201,9 +191,7 @@ def test_train_fits_model_and_logs_results(monkeypatch, model_name, model_logger
     assert result is model
     model.fit.assert_called_once_with(X_train, y_train)
     model.predict.assert_called_once_with(X_validation)
-    training.mlflow.log_metrics.assert_called_once_with(
-        {"mae": 1.0, "rmse": 1.0, "r2": -3.0}
-    )
+    training.mlflow.log_metrics.assert_called_once_with({"mae": 1.0, "rmse": 1.0, "r2": -3.0})
     training.mlflow.set_tags.assert_called_once_with(
         {
             "git_commit": "commit",

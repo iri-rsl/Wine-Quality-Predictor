@@ -12,9 +12,7 @@ from ml.promotion import should_promote
         (0.60, 0.50, 0.85, False, "Candidate RMSE exceeds quality threshold"),
     ],
 )
-def test_should_promote(
-    champion_MAE, candidate_MAE, candidate_rmse, expected, expected_reason
-):
+def test_should_promote(champion_MAE, candidate_MAE, candidate_rmse, expected, expected_reason):
     result, reason = should_promote(
         champion_metrics={"mae": champion_MAE},
         candidate_metrics={"mae": candidate_MAE, "rmse": candidate_rmse},
