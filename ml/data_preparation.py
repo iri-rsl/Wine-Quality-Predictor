@@ -1,4 +1,4 @@
-
+# Only useful in dev, for initializing the dataset from the original source.
 from pathlib import Path
 
 import pandas as pd
