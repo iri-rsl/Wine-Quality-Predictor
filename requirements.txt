@@ -1,18 +1,11 @@
-pandas
-numpy
-scikit-learn
-datasets
-mlflow
-dvc[azure]
-fastapi
-uvicorn
-pytest
-httpx
-ruff
+# Serving dependencies only (production image). Training deps live in requirements.txt.
+fastapi>=0.115,<1
+uvicorn[standard]>=0.30
+pydantic>=2.7,<3
+numpy>=1.26
+pandas>=2.2
+mlflow>=3.5
+xgboost>=2.1
+scikit-learn>=1.5
+python-dotenv>=1.0
 
-huggingface_hub
-fsspec
-
-python-dotenv
-
-xgboost
