@@ -17,12 +17,12 @@ def test_load_data_reads_train_and_validation_splits(tmp_path, monkeypatch):
     version_dir = tmp_path / "v1"
     version_dir.mkdir()
 
-    pd.DataFrame(
-        {"alcohol": [10.0, 11.0], "quality": [5, 6]}
-    ).to_csv(version_dir / "train.csv", index=False)
-    pd.DataFrame(
-        {"alcohol": [12.0], "quality": [7]}
-    ).to_csv(version_dir / "validation.csv", index=False)
+    pd.DataFrame({"alcohol": [10.0, 11.0], "quality": [5, 6]}).to_csv(
+        version_dir / "train.csv", index=False
+    )
+    pd.DataFrame({"alcohol": [12.0], "quality": [7]}).to_csv(
+        version_dir / "validation.csv", index=False
+    )
 
     monkeypatch.setattr(training, "DATA_DIR", tmp_path)
 
@@ -71,9 +71,7 @@ def test_get_git_commit_returns_commit_hash(monkeypatch):
         training.subprocess.CalledProcessError(1, ["git"]),
     ],
 )
-def test_get_git_commit_returns_unknown_when_git_is_unavailable(
-    monkeypatch, error
-):
+def test_get_git_commit_returns_unknown_when_git_is_unavailable(monkeypatch, error):
     def fail_to_run(*args, **kwargs):
         raise error
 
@@ -85,9 +83,7 @@ def test_get_git_commit_returns_unknown_when_git_is_unavailable(
 def test_get_dvc_hash_reads_hash_from_dvc_file(tmp_path, monkeypatch):
     data_dir = tmp_path / "data"
     data_dir.mkdir()
-    (data_dir / "processed.dvc").write_text(
-        "outs:\n- md5: abc123\n", encoding="utf-8"
-    )
+    (data_dir / "processed.dvc").write_text("outs:\n- md5: abc123\n", encoding="utf-8")
     monkeypatch.setattr(training, "ROOT_DIR", tmp_path)
 
     assert training.get_dvc_hash() == "abc123"
@@ -107,9 +103,7 @@ def test_get_dvc_hash_returns_unknown_when_hash_is_unavailable(
     data_dir.mkdir()
 
     if file_content is not None:
-        (data_dir / "processed.dvc").write_text(
-            file_content, encoding="utf-8"
-        )
+        (data_dir / "processed.dvc").write_text(file_content, encoding="utf-8")
 
     monkeypatch.setattr(training, "ROOT_DIR", tmp_path)
 
@@ -126,9 +120,7 @@ def test_setup_mlflow_requires_all_credentials(monkeypatch):
     ):
         monkeypatch.delenv(name, raising=False)
 
-    with pytest.raises(
-        ValueError, match="MLflow credentials are not fully configured"
-    ):
+    with pytest.raises(ValueError, match="MLflow credentials are not fully configured"):
         training.setup_mlflow()
 
 
@@ -161,9 +153,7 @@ def test_setup_mlflow_configures_tracking(monkeypatch):
         ("xgboost", "xgboost"),
     ],
 )
-def test_train_fits_model_and_logs_results(
-    monkeypatch, model_name, model_logger
-):
+def test_train_fits_model_and_logs_results(monkeypatch, model_name, model_logger):
     X_train = pd.DataFrame({"alcohol": [10.0, 11.0]})
     y_train = pd.Series([3, 4])
     X_validation = pd.DataFrame({"alcohol": [12.0, 13.0]})

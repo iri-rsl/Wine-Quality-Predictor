@@ -4,7 +4,6 @@ from pathlib import Path
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-
 RANDOM_STATE = 42
 DATASET_URL = "hf://datasets/mstz/wine/wine/train.csv"
 
@@ -52,29 +51,21 @@ def remove_cross_split_duplicates(train, validation, test):
 
     test = test.drop_duplicates(subset=columns).copy()
 
-    test_keys = set(
-        pd.util.hash_pandas_object(test[columns], index=False)
+    test_keys = set(pd.util.hash_pandas_object(test[columns], index=False))
+
+    validation_keys = pd.util.hash_pandas_object(validation[columns], index=False)
+
+    validation = (
+        validation[~validation_keys.isin(test_keys)]
+        .drop_duplicates(subset=columns)
+        .copy()
     )
 
-    validation_keys = pd.util.hash_pandas_object(
-        validation[columns], index=False
-    )
+    validation_keys = set(pd.util.hash_pandas_object(validation[columns], index=False))
 
-    validation = validation[
-        ~validation_keys.isin(test_keys)
-    ].drop_duplicates(subset=columns).copy()
+    train_keys = pd.util.hash_pandas_object(train[columns], index=False)
 
-    validation_keys = set(
-        pd.util.hash_pandas_object(validation[columns], index=False)
-    )
-
-    train_keys = pd.util.hash_pandas_object(
-        train[columns], index=False
-    )
-
-    train = train[
-        ~train_keys.isin(test_keys | validation_keys)
-    ].copy()
+    train = train[~train_keys.isin(test_keys | validation_keys)].copy()
 
     return train, validation, test
 
@@ -118,9 +109,7 @@ def main():
 
     train, validation, test = split_data(df)
 
-    train, validation, test = remove_cross_split_duplicates(
-        train, validation, test
-    )
+    train, validation, test = remove_cross_split_duplicates(train, validation, test)
 
     versions = create_versions(train, validation, test)
 
