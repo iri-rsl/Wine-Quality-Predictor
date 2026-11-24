@@ -1,16 +1,36 @@
-[tool.ruff]
-line-length = 140
-target-version = "py311"
-
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "ml"]
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-filterwarnings = ["ignore::DeprecationWarning"]
-
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wine-quality-prediction"
+version = "0.1.0"
+description = "Wine quality ML predictor for MLOps"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*", "ml*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+
+[tool.ruff.format]
+quote-style = "double"
+

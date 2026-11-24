@@ -1,0 +1,8 @@
+-r requirements.txt
+datasets
+huggingface_hub
+fsspec
+dvc[azure]
+pytest
+httpx
+ruff

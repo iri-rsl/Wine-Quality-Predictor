@@ -1,4 +1,3 @@
-
 import argparse
 import os
 import re
@@ -40,10 +39,9 @@ def load_data(version):
 
 def create_model(model_name):
     if model_name == "linear_regression":
-        return Pipeline([
-            ("scaler", StandardScaler()),
-            ("regressor", LinearRegression())
-        ])
+        return Pipeline(
+            [("scaler", StandardScaler()), ("regressor", LinearRegression())]
+        )
 
     if model_name == "xgboost":
         return XGBRegressor(
@@ -56,7 +54,7 @@ def create_model(model_name):
             reg_lambda=1.0,
             objective="reg:squarederror",
             random_state=42,
-            n_jobs=-1
+            n_jobs=-1,
         )
 
     raise ValueError(f"Unknown model: {model_name}")
@@ -69,7 +67,7 @@ def get_git_commit():
             cwd=ROOT_DIR,
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         return result.stdout.strip()
     except (subprocess.CalledProcessError, FileNotFoundError):
@@ -104,6 +102,7 @@ def setup_mlflow():
 
     mlflow.set_experiment(EXPERIMENT_NAME)
 
+
 def train(model_name, version):
     setup_mlflow()
 
@@ -122,56 +121,59 @@ def train(model_name, version):
         rmse = mean_squared_error(y_validation, predictions) ** 0.5
         r2 = r2_score(y_validation, predictions)
 
-        mlflow.log_params({
-            "model": model_name,
-            "dataset_version": version,
-            "training_rows": len(X_train),
-            "validation_rows": len(X_validation),
-            "feature_count": X_train.shape[1],
-        })
+        mlflow.log_params(
+            {
+                "model": model_name,
+                "dataset_version": version,
+                "training_rows": len(X_train),
+                "validation_rows": len(X_validation),
+                "feature_count": X_train.shape[1],
+            }
+        )
 
         if model_name == "linear_regression":
-            mlflow.log_params({
-                "scaler": "StandardScaler",
-                "fit_intercept": True,
-            })
-
-            mlflow.sklearn.log_model(
-                model,
-                name="model"
+            mlflow.log_params(
+                {
+                    "scaler": "StandardScaler",
+                    "fit_intercept": True,
+                }
             )
+
+            mlflow.sklearn.log_model(model, name="model")
 
         elif model_name == "xgboost":
-            mlflow.log_params({
-                "n_estimators": 300,
-                "learning_rate": 0.05,
-                "max_depth": 4,
-                "min_child_weight": 3,
-                "subsample": 0.8,
-                "colsample_bytree": 0.8,
-                "reg_lambda": 1.0,
-            })
-
-            mlflow.xgboost.log_model(
-                model,
-                name="model"
+            mlflow.log_params(
+                {
+                    "n_estimators": 300,
+                    "learning_rate": 0.05,
+                    "max_depth": 4,
+                    "min_child_weight": 3,
+                    "subsample": 0.8,
+                    "colsample_bytree": 0.8,
+                    "reg_lambda": 1.0,
+                }
             )
 
-        mlflow.log_metrics({
-            "mae": mae,
-            "rmse": rmse,
-            "r2": r2,
-        })
+            mlflow.xgboost.log_model(model, name="model")
+
+        mlflow.log_metrics(
+            {
+                "mae": mae,
+                "rmse": rmse,
+                "r2": r2,
+            }
+        )
 
         # Save validation predictions as an evaluation artifact
-        evaluation_df = pd.DataFrame({
-            "actual_quality": y_validation.to_numpy(),
-            "predicted_quality": predictions,
-        })
+        evaluation_df = pd.DataFrame(
+            {
+                "actual_quality": y_validation.to_numpy(),
+                "predicted_quality": predictions,
+            }
+        )
 
         evaluation_df["residual"] = (
-            evaluation_df["actual_quality"]
-            - evaluation_df["predicted_quality"]
+            evaluation_df["actual_quality"] - evaluation_df["predicted_quality"]
         )
 
         evaluation_df["absolute_error"] = evaluation_df["residual"].abs()
@@ -181,16 +183,15 @@ def train(model_name, version):
 
             evaluation_df.to_csv(evaluation_path, index=False)
 
-            mlflow.log_artifact(
-                str(evaluation_path),
-                artifact_path="evaluation"
-            )
+            mlflow.log_artifact(str(evaluation_path), artifact_path="evaluation")
 
-        mlflow.set_tags({
-            "git_commit": get_git_commit(),
-            "dvc_data_hash": get_dvc_hash(),
-            "comparison_group": "initial_model_comparison",
-        })
+        mlflow.set_tags(
+            {
+                "git_commit": get_git_commit(),
+                "dvc_data_hash": get_dvc_hash(),
+                "comparison_group": "initial_model_comparison",
+            }
+        )
 
         print(f"\nCompleted: {run_name}")
         print(f"MAE: {mae:.4f}")
@@ -204,20 +205,12 @@ def train(model_name, version):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(
-        "--model",
-        choices=["linear_regression", "xgboost"]
-    )
+    parser.add_argument("--model", choices=["linear_regression", "xgboost"])
+
+    parser.add_argument("--version", choices=["v1", "v2"])
 
     parser.add_argument(
-        "--version",
-        choices=["v1", "v2"]
-    )
-
-    parser.add_argument(
-        "--all",
-        action="store_true",
-        help="Run all model and dataset combinations"
+        "--all", action="store_true", help="Run all model and dataset combinations"
     )
 
     args = parser.parse_args()
