@@ -32,3 +32,6 @@ data/processed/
 
 # Local MLflow database
 mlflow.db
+
+# Local app database
+var/
