@@ -12,7 +12,7 @@ reports ready.
 
 ```bash
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
-pip install -r requirements/dev.txt
+pip install -r requirements-dev.txt
 cp .env.example .env                                   # Windows: copy .env.example .env
 uvicorn app.main:app --reload --env-file .env
 ```
@@ -51,9 +51,15 @@ ruff check .
 
 None of the tests need DagsHub, Azure or a trained model.
 
+---
+To reformat the code automatically, run:
+```bash
+ruff check . --fix
+ruff format .
+```
+
 ## Branches and CI
 
 - `feature/*` branches start from `dev` and merge into `dev` through a reviewed pull request.
 - `dev` → `staging` → `main` are promoted through pull requests only.
-- `.github/workflows/ci.yml` runs on every pull request into `dev`, `staging` and `main` (and on pushes to them):
-  job `lint` (ruff) and job `test` (pytest). Both are required status checks on the three branches.
+- `.github/workflows/ci.yml` runs on every pull request into `dev`, `staging` and `main`: job `lint` (ruff) and job `test` (pytest). Both are required status checks on the three branches.
