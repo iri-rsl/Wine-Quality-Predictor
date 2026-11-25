@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 def _feature(ge: float, le: float, description: str):
@@ -50,6 +50,17 @@ class WineFeatures(BaseModel):
     alcohol: float = _feature(7.0, 16.0, "Alcohol, % vol")
     is_red: int = Field(..., ge=0, le=1, description="1 for red wine, 0 for white")
 
+    # Label only: stored in the history, never sent to the model.
+    wine_name: str | None = Field(None, max_length=80, description="Optional bottle name, e.g. 'Château X 2019'")
+
+    @field_validator("wine_name")
+    @classmethod
+    def blank_name_is_none(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = " ".join(value.split())  # trim and collapse whitespace, drop newlines/tabs
+        return value or None
+
     @model_validator(mode="after")
     def free_so2_within_total(self):
         if self.free_sulfur_dioxide > self.total_sulfur_dioxide:
@@ -64,6 +75,7 @@ class PredictionResponse(BaseModel):
     model_name: str
     model_version: str
     prediction_id: int | None = None
+    wine_name: str | None = None
 
 
 class ModelInfo(BaseModel):
@@ -98,3 +110,4 @@ class HistoryItem(BaseModel):
     quality: float
     label: str
     model_version: str
+    wine_name: str | None = None

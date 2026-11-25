@@ -119,6 +119,8 @@ function readForm() {
     features[name] = value;
   }
   features.is_red = Number(document.querySelector("input[name=is_red]:checked").value);
+  const wineName = $("wine-name").value.trim();
+  if (wineName) features.wine_name = wineName;
   if (features.free_sulfur_dioxide > features.total_sulfur_dioxide) {
     invalid.push(["free_sulfur_dioxide", "Free SO₂ cannot exceed total SO₂"]);
   }
@@ -164,6 +166,8 @@ function renderResult(r) {
   const [color, comment] = LABELS[r.label] || ["#7B1E3A", ""];
   $("result-empty").hidden = true;
   $("result").hidden = false;
+  $("result-name").textContent = r.wine_name || "";
+  $("result-name").hidden = !r.wine_name;
   $("score").textContent = r.quality.toFixed(1);
   $("label").textContent = r.label;
   $("label").style.background = color;
@@ -293,13 +297,14 @@ async function loadHistory() {
   const rows = $("history-rows");
   rows.replaceChildren();
   if (!items.length) {
-    rows.innerHTML = `<tr><td colspan="7" class="muted">No analyses yet. Your predictions will appear here.</td></tr>`;
+    rows.innerHTML = `<tr><td colspan="8" class="muted">No analyses yet. Your predictions will appear here.</td></tr>`;
     return;
   }
   for (const item of items) {
     const tr = document.createElement("tr");
     const date = new Date(item.created_at).toLocaleString();
     const cells = [
+      item.wine_name || "—",
       date,
       item.inputs.is_red ? "Red" : "White",
       null,
@@ -310,7 +315,7 @@ async function loadHistory() {
     ];
     cells.forEach((value, idx) => {
       const td = document.createElement("td");
-      if (idx === 2) {
+      if (idx === 3) {
         td.innerHTML = `<span class="bar" style="width:${item.quality * 8}px"></span>${item.quality.toFixed(2)}`;
       } else {
         td.textContent = value;

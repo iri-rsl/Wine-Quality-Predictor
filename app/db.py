@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS predictions (
     inputs TEXT NOT NULL,
     quality REAL NOT NULL,
     label TEXT NOT NULL,
-    model_version TEXT NOT NULL
+    model_version TEXT NOT NULL,
+    wine_name TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_predictions_user ON predictions(user_id, id);
 """
@@ -47,6 +48,14 @@ class Database:
             Path(path).parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as conn:
             conn.executescript(SCHEMA)
+            self._migrate(conn)
+
+    @staticmethod
+    def _migrate(conn) -> None:
+        """Add columns introduced after the first release to existing database files."""
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(predictions)")}
+        if "wine_name" not in columns:
+            conn.execute("ALTER TABLE predictions ADD COLUMN wine_name TEXT")
 
     @contextmanager
     def connect(self):
@@ -102,12 +111,12 @@ class Database:
             conn.execute("DELETE FROM sessions WHERE token = ?", (token,))
 
     # history
-    def add_prediction(self, user_id, inputs, quality, label, model_version) -> int:
+    def add_prediction(self, user_id, inputs, quality, label, model_version, wine_name=None) -> int:
         with self.connect() as conn:
             cur = conn.execute(
-                "INSERT INTO predictions (user_id, created_at, inputs, quality, label, model_version)"
-                " VALUES (?, ?, ?, ?, ?, ?)",
-                (user_id, _now().isoformat(), json.dumps(inputs), quality, label, model_version),
+                "INSERT INTO predictions (user_id, created_at, inputs, quality, label, model_version, wine_name)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (user_id, _now().isoformat(), json.dumps(inputs), quality, label, model_version, wine_name),
             )
             return cur.lastrowid
 
@@ -125,6 +134,7 @@ class Database:
                 "quality": r["quality"],
                 "label": r["label"],
                 "model_version": r["model_version"],
+                "wine_name": r["wine_name"],
             }
             for r in rows
         ]

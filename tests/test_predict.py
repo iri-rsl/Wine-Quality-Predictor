@@ -9,13 +9,22 @@ def test_valid_prediction_has_expected_format(client, wine):
     resp = client.post("/predict", json=wine)
     assert resp.status_code == 200
     body = resp.json()
-    assert set(body) == {"quality", "quality_class", "label", "model_name", "model_version", "prediction_id"}
+    assert set(body) == {
+        "quality",
+        "quality_class",
+        "label",
+        "model_name",
+        "model_version",
+        "prediction_id",
+        "wine_name",
+    }
     assert isinstance(body["quality"], float)
     assert 0 <= body["quality"] <= 10
     assert body["quality_class"] == round(body["quality"])
     assert body["label"] in {"Poor", "Average", "Good", "Excellent"}
     assert body["model_version"] == "dummy-0"
     assert body["prediction_id"] is None  # anonymous calls are not stored
+    assert body["wine_name"] is None
 
 
 def test_prediction_is_deterministic(client, wine):

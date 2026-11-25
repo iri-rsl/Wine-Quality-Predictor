@@ -132,7 +132,8 @@ def create_app(settings: Settings | None = None, loader=None) -> FastAPI:
 
     @app.post("/predict", response_model=PredictionResponse, tags=["model"])
     def predict(features: WineFeatures, user=Depends(optional_user)):
-        inputs = features.model_dump()
+        wine_name = features.wine_name
+        inputs = features.model_dump(exclude={"wine_name"})
         try:
             raw, model = manager.predict(inputs)
         except ModelNotReadyError as exc:
@@ -141,7 +142,7 @@ def create_app(settings: Settings | None = None, loader=None) -> FastAPI:
         label = quality_label(score)
         prediction_id = None
         if user is not None:
-            prediction_id = db.add_prediction(user["id"], inputs, score, label, model.version)
+            prediction_id = db.add_prediction(user["id"], inputs, score, label, model.version, wine_name)
         return PredictionResponse(
             quality=score,
             quality_class=int(round(score)),
@@ -149,6 +150,7 @@ def create_app(settings: Settings | None = None, loader=None) -> FastAPI:
             model_name=settings.model_name,
             model_version=model.version,
             prediction_id=prediction_id,
+            wine_name=wine_name,
         )
 
     # ---------------------------------------------------------- accounts
