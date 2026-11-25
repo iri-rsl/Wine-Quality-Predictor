@@ -39,9 +39,7 @@ def load_data(version):
 
 def create_model(model_name):
     if model_name == "linear_regression":
-        return Pipeline(
-            [("scaler", StandardScaler()), ("regressor", LinearRegression())]
-        )
+        return Pipeline([("scaler", StandardScaler()), ("regressor", LinearRegression())])
 
     if model_name == "xgboost":
         return XGBRegressor(
@@ -172,9 +170,7 @@ def train(model_name, version):
             }
         )
 
-        evaluation_df["residual"] = (
-            evaluation_df["actual_quality"] - evaluation_df["predicted_quality"]
-        )
+        evaluation_df["residual"] = evaluation_df["actual_quality"] - evaluation_df["predicted_quality"]
 
         evaluation_df["absolute_error"] = evaluation_df["residual"].abs()
 
@@ -209,9 +205,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--version", choices=["v1", "v2"])
 
-    parser.add_argument(
-        "--all", action="store_true", help="Run all model and dataset combinations"
-    )
+    parser.add_argument("--all", action="store_true", help="Run all model and dataset combinations")
 
     args = parser.parse_args()
 

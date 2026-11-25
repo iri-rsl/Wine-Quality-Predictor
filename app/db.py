@@ -87,8 +87,7 @@ class Database:
     def user_for_token(self, token: str):
         with self.connect() as conn:
             row = conn.execute(
-                "SELECT u.*, s.expires_at FROM sessions s JOIN users u ON u.id = s.user_id "
-                "WHERE s.token = ?",
+                "SELECT u.*, s.expires_at FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ?",
                 (token,),
             ).fetchone()
             if row is None:

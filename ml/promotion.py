@@ -21,6 +21,7 @@ def should_promote(champion_metrics, candidate_metrics):
 
     return True, "Candidate passed all quality gates"
 
+
 def promote_if_passing(client, model_name, candidate_version, champion_metrics, candidate_metrics, alias="champion"):
     """Move `alias` to the candidate only if it passes the quality gates.
 
