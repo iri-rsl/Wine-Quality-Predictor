@@ -101,7 +101,7 @@ def setup_mlflow():
     mlflow.set_experiment(EXPERIMENT_NAME)
 
 
-def train(model_name, version):
+def train(model_name, version, comparison_group="initial_model_comparison"):
     setup_mlflow()
 
     X_train, y_train, X_validation, y_validation = load_data(version)
@@ -185,7 +185,7 @@ def train(model_name, version):
             {
                 "git_commit": get_git_commit(),
                 "dvc_data_hash": get_dvc_hash(),
-                "comparison_group": "initial_model_comparison",
+                "comparison_group": comparison_group,
             }
         )
 
@@ -195,7 +195,17 @@ def train(model_name, version):
         print(f"R2: {r2:.4f}")
         print(f"Run ID: {run.info.run_id}")
 
-    return model
+    return {
+        "model": model,
+        "run_id": run.info.run_id,
+        "model_name": model_name,
+        "dataset_version": version,
+        "validation_metrics": {
+            "mae": mae,
+            "rmse": rmse,
+            "r2": r2,
+        },
+    }
 
 
 if __name__ == "__main__":
