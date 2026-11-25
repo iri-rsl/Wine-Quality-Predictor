@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "processed"
 
 CHEMICAL_FEATURES = [
@@ -57,9 +56,7 @@ def validate_split(df, version, split_name):
     required = expected_columns(version)
 
     if set(df.columns) != set(required):
-        raise ValueError(
-            f"{version}/{split_name}: unexpected or missing columns"
-        )
+        raise ValueError(f"{version}/{split_name}: unexpected or missing columns")
 
     if df.empty:
         raise ValueError(f"{version}/{split_name}: dataset is empty")
@@ -70,11 +67,11 @@ def validate_split(df, version, split_name):
     if not all(pd.api.types.is_numeric_dtype(df[col]) for col in required):
         raise ValueError(f"{version}/{split_name}: non-numeric values detected")
 
-    if not df[CHEMICAL_FEATURES].apply(
-        lambda column: column.map(
-            lambda value: pd.notna(value) and abs(value) != float("inf")
-        ).all()
-    ).all():
+    if (
+        not df[CHEMICAL_FEATURES]
+        .apply(lambda column: column.map(lambda value: pd.notna(value) and abs(value) != float("inf")).all())
+        .all()
+    ):
         raise ValueError(f"{version}/{split_name}: non-finite values detected")
 
     if not df[TARGET].between(0, 10).all():
@@ -104,9 +101,7 @@ def validate_separation(splits):
         overlap = unique_a.merge(unique_b, how="inner")
 
         if not overlap.empty:
-            raise ValueError(
-                f"Data leakage detected between {name_a} and {name_b}"
-            )
+            raise ValueError(f"Data leakage detected between {name_a} and {name_b}")
 
 
 def validate_version(version):
@@ -134,12 +129,8 @@ def validate_cross_version_consistency():
     for split in ("validation", "test"):
         v2_without_type = v2[split].drop(columns="is_red")
 
-        if not v1[split].reset_index(drop=True).equals(
-            v2_without_type.reset_index(drop=True)
-        ):
-            raise ValueError(
-                f"V1 and V2 have different {split} observations"
-            )
+        if not v1[split].reset_index(drop=True).equals(v2_without_type.reset_index(drop=True)):
+            raise ValueError(f"V1 and V2 have different {split} observations")
 
     print("Cross-version consistency: passed")
 

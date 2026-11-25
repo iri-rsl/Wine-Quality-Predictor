@@ -1,18 +1,16 @@
-
 import argparse
 
 import mlflow
 from mlflow.tracking import MlflowClient
 
 from ml.data_validation import (
-    validate_version,
     validate_cross_version_consistency,
+    validate_version,
 )
-from ml.train import train, setup_mlflow
-from ml.evaluate import load_champion, evaluate_champion_and_candidate
-from ml.promotion import should_promote, promote_if_passing
+from ml.evaluate import evaluate_champion_and_candidate, load_champion
 from ml.model_registry import register_candidate
-
+from ml.promotion import promote_if_passing, should_promote
+from ml.train import setup_mlflow, train
 
 MODEL_NAME = "WineQualityPredictor"
 
@@ -90,9 +88,7 @@ def run_continuous_training(dataset_version, allow_promotion=False):
             reason = "Candidate passed quality gates; dry run, no promotion."
 
     # 9. Verify the registry state
-    current = client.get_model_version_by_alias(
-        MODEL_NAME, "champion"
-    )
+    current = client.get_model_version_by_alias(MODEL_NAME, "champion")
     current_version = str(current.version)
 
     if promoted and current_version != str(candidate_registry_version):
@@ -103,35 +99,32 @@ def run_continuous_training(dataset_version, allow_promotion=False):
 
     # 10. Log the CT decision
     with mlflow.start_run(run_name=f"ct_{dataset_version}") as run:
-        mlflow.log_params({
-            "dataset_version": dataset_version,
-            "model_name": MODEL_NAME,
-            "retrain_required": retrain,
-            "allow_promotion": allow_promotion,
-            "previous_champion_version": previous_version,
-        })
+        mlflow.log_params(
+            {
+                "dataset_version": dataset_version,
+                "model_name": MODEL_NAME,
+                "retrain_required": retrain,
+                "allow_promotion": allow_promotion,
+                "previous_champion_version": previous_version,
+            }
+        )
 
         if candidate is not None:
             mlflow.log_param("candidate_run_id", candidate["run_id"])
 
         if comparison is not None:
             for name in ("champion", "candidate"):
-                mlflow.log_metrics({
-                    f"{name}_{metric}": value
-                    for metric, value in comparison[name].items()
-                })
+                mlflow.log_metrics({f"{name}_{metric}": value for metric, value in comparison[name].items()})
 
-        mlflow.set_tags({
-            "workflow": "continuous_training",
-            "promotion_decision": (
-                "promoted" if promoted else "retained"
-            ),
-            "decision_reason": reason,
-            "candidate_registry_version": str(
-                candidate_registry_version or "none"
-            ),
-            "current_champion_version": current_version,
-        })
+        mlflow.set_tags(
+            {
+                "workflow": "continuous_training",
+                "promotion_decision": ("promoted" if promoted else "retained"),
+                "decision_reason": reason,
+                "candidate_registry_version": str(candidate_registry_version or "none"),
+                "current_champion_version": current_version,
+            }
+        )
 
     print("\n--- CT Result ---")
     print(f"Retraining required: {retrain}")

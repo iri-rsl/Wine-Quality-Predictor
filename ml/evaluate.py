@@ -1,6 +1,6 @@
-import pandas as pd
 import mlflow.pyfunc
-
+import pandas as pd
+from mlflow.tracking import MlflowClient
 from sklearn.metrics import (
     mean_absolute_error,
     mean_squared_error,
@@ -8,8 +8,6 @@ from sklearn.metrics import (
 )
 
 from ml.train import DATA_DIR, setup_mlflow
-from mlflow.tracking import MlflowClient
-
 
 MODEL_NAME = "WineQualityPredictor"
 
@@ -85,14 +83,10 @@ def evaluate_champion_and_candidate(
     # Ensure both versions contain the same evaluation observations.
     common_columns = X_champion.columns.intersection(X_candidate.columns)
 
-    if not X_champion[common_columns].reset_index(drop=True).equals(
-        X_candidate[common_columns].reset_index(drop=True)
-    ):
+    if not X_champion[common_columns].reset_index(drop=True).equals(X_candidate[common_columns].reset_index(drop=True)):
         raise ValueError("Champion and candidate evaluation observations differ.")
 
-    if not y_champion.reset_index(drop=True).equals(
-        y_candidate.reset_index(drop=True)
-    ):
+    if not y_champion.reset_index(drop=True).equals(y_candidate.reset_index(drop=True)):
         raise ValueError("Champion and candidate evaluation targets differ.")
 
     champion_metrics = evaluate_model(

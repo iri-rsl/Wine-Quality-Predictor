@@ -3,7 +3,6 @@ from mlflow.tracking import MlflowClient
 
 from ml.train import setup_mlflow
 
-
 MODEL_NAME = "WineQualityPredictor"
 
 
@@ -43,4 +42,3 @@ def register_candidate(run_id, model_name=MODEL_NAME):
     )
 
     return registered.version
-
