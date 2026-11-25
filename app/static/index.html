@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wine Quality Predictor</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍷</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="hero">
+    <nav class="topbar">
+      <span class="brand">🍷 Wine Quality Predictor</span>
+      <div id="account" class="account">
+        <button id="open-auth" class="btn btn-ghost" type="button">Sign in</button>
+        <div id="signed-in" class="signed-in" hidden>
+          <span>Signed in as <strong id="username"></strong></span>
+          <button id="logout" class="btn btn-ghost" type="button">Sign out</button>
+        </div>
+      </div>
+    </nav>
+    <div class="hero-content">
+      <h1>How good is this wine?</h1>
+      <p>Estimate a wine's sensory quality score from its laboratory analysis, using the production
+        model approved in our MLflow registry.</p>
+      <div class="pills">
+        <span class="pill" id="model-pill"><span class="dot" id="model-dot"></span><span id="model-status">Connecting…</span></span>
+        <a class="pill pill-link" href="/docs">API docs</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card form-card" aria-labelledby="form-title">
+      <div class="card-head">
+        <h2 id="form-title">Lab analysis</h2>
+        <div class="controls">
+          <label class="field-inline">Sample wine
+            <select id="preset"></select>
+          </label>
+          <div class="segmented" role="radiogroup" aria-label="Wine type">
+            <input type="radio" name="is_red" id="type-red" value="1" checked><label for="type-red">Red</label>
+            <input type="radio" name="is_red" id="type-white" value="0"><label for="type-white">White</label>
+          </div>
+        </div>
+      </div>
+
+      <form id="predict-form" novalidate>
+        <div class="field name-field">
+          <label for="wine-name">Bottle name<span class="unit">optional</span></label>
+          <input id="wine-name" name="wine_name" type="text" maxlength="80" autocomplete="off"
+                 placeholder="e.g. Château Margaux 2015">
+        </div>
+        <div id="fields"></div>
+        <div id="form-error" class="alert" role="alert" hidden></div>
+        <button id="predict-btn" class="btn btn-primary btn-wide" type="submit">Predict quality</button>
+      </form>
+    </section>
+
+    <section class="card result-card" aria-live="polite">
+      <div id="result-empty" class="empty">
+        <div class="empty-icon">🍇</div>
+        <strong>No analysis yet</strong>
+        <p>Pick a sample wine or enter your lab values, then run the prediction.</p>
+      </div>
+      <div id="result" hidden>
+        <div id="result-name" class="result-name" hidden></div>
+        <div class="muted">Predicted quality</div>
+        <div class="score"><span id="score">–</span><span class="score-max">/ 10</span></div>
+        <span id="label" class="chip"></span>
+        <p id="comment" class="muted"></p>
+        <svg class="gauge" viewBox="0 0 200 110" aria-hidden="true">
+          <path class="gauge-track" d="M15 100 A85 85 0 0 1 185 100" />
+          <path id="gauge-bar" class="gauge-bar" d="M15 100 A85 85 0 0 1 185 100" pathLength="100" />
+          <line id="gauge-mean" class="gauge-mean" x1="0" y1="0" x2="0" y2="0" />
+        </svg>
+        <div class="stats">
+          <div><div class="muted">vs. dataset mean (5.8)</div><div id="delta" class="stat"></div></div>
+          <div><div class="muted">Model version</div><div id="result-version" class="stat"></div></div>
+        </div>
+        <p id="saved-note" class="muted small"></p>
+      </div>
+    </section>
+
+    <section id="history" class="card history-card">
+      <div class="card-head">
+        <h2>My history</h2>
+        <button id="clear-history" class="btn btn-ghost-dark" type="button" hidden>Clear history</button>
+      </div>
+      <div id="history-locked" class="empty">
+        <div class="empty-icon">🔒</div>
+        <strong>Your history is private</strong>
+        <p>Sign in or create an account to keep track of every wine you analyse.</p>
+      </div>
+      <div id="history-content" hidden>
+        <div class="kpis">
+          <div><div class="muted">Analyses</div><div id="kpi-count" class="stat"></div></div>
+          <div><div class="muted">Average score</div><div id="kpi-avg" class="stat"></div></div>
+          <div><div class="muted">Best score</div><div id="kpi-best" class="stat"></div></div>
+        </div>
+        <svg id="history-chart" class="chart" aria-hidden="true"></svg>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Wine</th><th>Date</th><th>Type</th><th>Score</th><th>Rating</th><th>Alcohol</th><th>Volatile acidity</th><th>Model</th></tr></thead>
+            <tbody id="history-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">Wine Quality Predictor · MLOps final-year project · data: UCI Wine Quality (CC BY 4.0)</footer>
+
+  <dialog id="auth-dialog">
+    <form id="auth-form" method="dialog" novalidate>
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab active" data-mode="login" role="tab">Sign in</button>
+        <button type="button" class="tab" data-mode="signup" role="tab">Create account</button>
+      </div>
+      <label>Username<input id="auth-username" name="username" autocomplete="username" required></label>
+      <label>Password<input id="auth-password" name="password" type="password" autocomplete="current-password" required></label>
+      <p id="auth-hint" class="muted small">Welcome back.</p>
+      <div id="auth-error" class="alert" role="alert" hidden></div>
+      <div class="dialog-actions">
+        <button type="button" id="auth-cancel" class="btn btn-ghost-dark">Cancel</button>
+        <button type="submit" id="auth-submit" class="btn btn-primary">Sign in</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

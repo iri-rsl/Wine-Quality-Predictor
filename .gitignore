@@ -3,9 +3,11 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+*.egg-info
 
 # IDE
 .vscode/
+.idea/
 
 # Environment variables and secrets
 .env
@@ -13,10 +15,6 @@ venv/
 
 # MLflow
 mlruns/
-
-# Data
-data/*
-!data/.gitkeep
 
 # DVC cache
 .dvc/cache/
@@ -28,3 +26,12 @@ data/*
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated datasets (tracked by DVC)
+data/processed/
+
+# Local MLflow database
+mlflow.db
+
+# Local app database
+var/
