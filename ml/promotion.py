@@ -32,9 +32,7 @@ def promote_if_passing(
 ):
     """Promote a candidate only if it passes all quality gates."""
 
-    previous = str(
-        client.get_model_version_by_alias(model_name, alias).version
-    )
+    previous = str(client.get_model_version_by_alias(model_name, alias).version)
 
     promoted, reason = should_promote(
         champion_metrics,
