@@ -75,3 +75,47 @@ Experiments are stored on the shared [DagsHub MLflow server](https://dagshub.com
 Each training run records model parameters, evaluation metrics, Git commit SHA, dataset version, DVC identifier, trained model and validation prediction artifacts.
 
 The held-out test set remains reserved for subsequent champion/candidate evaluation and is not used for model selection or hyperparameter tuning.
+
+## Continuous Training (CT)
+
+Continuous Training is implemented through `.github/workflows/ct.yml` and can be triggered manually from GitHub Actions.
+
+### Workflow
+
+1. **Data retrieval:** Pull versioned datasets from Azure Blob Storage using DVC.
+2. **Validation:** Check dataset schema, values, and train/validation/test separation.
+3. **Retraining decision:** Compare the requested dataset version with the current champion's training dataset.
+4. **Training:** If the dataset version has changed, train an XGBoost candidate.
+5. **Evaluation:** Compare the champion and candidate on the same held-out test observations.
+6. **Promotion:** Approve candidates only if all quality gates pass.
+7. **Tracking:** Log training runs, metrics, and decisions to DagsHub MLflow.
+
+### Promotion criteria
+
+A candidate must satisfy all three conditions:
+
+- MAE ≤ 0.60
+- RMSE ≤ 0.80
+- MAE improves by at least 1% compared with the champion.
+
+Rejected candidates do not replace the champion.
+
+### Model registry and rollback
+
+The approved production model is identified by the `champion` alias in the MLflow Model Registry. Approved versions receive the `approved=true` tag.
+
+Rollback is implemented in `ml/rollback.py` and only permits restoring previously approved versions.
+
+### Execution
+
+Run locally:
+
+```bash
+python -m ml.continuous_training --version v2
+```
+
+Or trigger **Continuous Training** in GitHub Actions with the desired dataset version.
+
+By default, execution is a dry run: training and evaluation occur, but no model is promoted. Promotion can be enabled using `--allow-promotion`.
+
+Refreshing the deployed application and verifying the live model version are handled as part of deployment integration.

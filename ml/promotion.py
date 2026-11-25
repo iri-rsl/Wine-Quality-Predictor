@@ -22,15 +22,45 @@ def should_promote(champion_metrics, candidate_metrics):
     return True, "Candidate passed all quality gates"
 
 
-def promote_if_passing(client, model_name, candidate_version, champion_metrics, candidate_metrics, alias="champion"):
-    """Move `alias` to the candidate only if it passes the quality gates.
+def promote_if_passing(
+    client,
+    model_name,
+    candidate_version,
+    champion_metrics,
+    candidate_metrics,
+    alias="champion",
+):
+    """Promote a candidate only if it passes all quality gates."""
 
-    `client` is an MlflowClient (or a fake in tests). Returns (promoted, reason, champion_version)
-    where champion_version is the version holding the alias after the decision.
-    """
     previous = str(client.get_model_version_by_alias(model_name, alias).version)
-    promoted, reason = should_promote(champion_metrics, candidate_metrics)
+
+    promoted, reason = should_promote(
+        champion_metrics,
+        candidate_metrics,
+    )
+
     if not promoted:
         return False, reason, previous
-    client.set_registered_model_alias(model_name, alias, str(candidate_version))
-    return True, reason, str(candidate_version)
+
+    # Mark the candidate as approved
+    client.set_model_version_tag(
+        name=model_name,
+        version=str(candidate_version),
+        key="approved",
+        value="true",
+    )
+
+    # Move the champion alias
+    client.set_registered_model_alias(
+        name=model_name,
+        alias=alias,
+        version=str(candidate_version),
+    )
+
+    # Verify the new champion
+    current = client.get_model_version_by_alias(model_name, alias)
+
+    if str(current.version) != str(candidate_version):
+        raise RuntimeError("Champion alias verification failed.")
+
+    return True, reason, str(current.version)
