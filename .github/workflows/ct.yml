@@ -21,12 +21,12 @@ jobs:
     name: Validate, Train and Evaluate
     runs-on: ubuntu-latest
 
-  env:
-    MLFLOW_TRACKING_URI: ${{ vars.MLFLOW_TRACKING_URI }}
-    MLFLOW_TRACKING_USERNAME: ${{ vars.MLFLOW_TRACKING_USERNAME }}
-    MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
-    AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_STORAGE_ACCOUNT }}
-    AZURE_STORAGE_SAS_TOKEN: ${{ secrets.AZURE_STORAGE_SAS_TOKEN }}
+    env:
+      MLFLOW_TRACKING_URI: ${{ vars.MLFLOW_TRACKING_URI }}
+      MLFLOW_TRACKING_USERNAME: ${{ vars.MLFLOW_TRACKING_USERNAME }}
+      MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+      AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_STORAGE_ACCOUNT }}
+      AZURE_STORAGE_SAS_TOKEN: ${{ secrets.AZURE_STORAGE_SAS_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -35,7 +35,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           cache: pip
 
       - name: Install dependencies
