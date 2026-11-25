@@ -12,7 +12,7 @@ To run the container, you can choose between two options:
 
 1. With controlled dummy data:
 ```bash
-docker run --rm -d --name wine-quality `
+docker run --rm -d --name wine-quality-predictor `
   -p 8000:8000 `
   -e MODEL_SOURCE=dummy `
   -e DATABASE_PATH=/app/var/app.db `
@@ -21,7 +21,7 @@ docker run --rm -d --name wine-quality `
 
 2. With real data (make sure the env variables are set in the `.env` file):
 ```bash
-docker run --rm -d --name wine-quality `
+docker run --rm -d --name wine-quality-predictor `
   -p 8000:8000 `
   --env-file .env `
   wine-quality-predictor:local
