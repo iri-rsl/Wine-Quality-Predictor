@@ -67,12 +67,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker run --name wine-quality-smoke --rm -d \
+          docker run --name wine-quality-predictor --rm -d \
             -p 127.0.0.1:8000:8000 \
             -e MODEL_SOURCE=dummy \
             -e DATABASE_PATH=/app/var/app.db \
             wine-quality-predictor:${{ github.sha }}
-          trap 'docker rm -f wine-quality-smoke >/dev/null 2>&1 || true' EXIT
+          trap 'docker rm -f wine-quality-predictor >/dev/null 2>&1 || true' EXIT
 
           ready=false
           for _ in {1..60}; do
@@ -85,7 +85,7 @@ jobs:
           done
 
           if [ "$ready" != true ]; then
-            docker logs wine-quality-smoke
+            docker logs wine-quality-predictor
             echo "Container did not become ready"
             exit 1
           fi
