@@ -65,6 +65,12 @@ class FakeClient:
         self.calls.append((name, alias, version))
         self.aliases[alias] = version
 
+    def set_model_version_tag(self, name, version, key, value):
+        if not hasattr(self, "version_tags"):
+            self.version_tags = {}
+
+        self.version_tags.setdefault(str(version), {})[key] = value
+
 
 def test_passing_candidate_moves_alias():
     client = FakeClient("1")
@@ -72,6 +78,7 @@ def test_passing_candidate_moves_alias():
     assert promoted and version == "2"
     assert client.aliases["champion"] == "2"
     assert client.calls == [("WineQualityPredictor", "champion", "2")]
+    assert client.version_tags["2"]["approved"] == "true"
 
 
 @pytest.mark.parametrize("candidate", [{"mae": 0.539, "rmse": 0.69}, {"mae": 0.70, "rmse": 0.90}])
