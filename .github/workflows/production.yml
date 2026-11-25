@@ -1,0 +1,196 @@
+name: Production CD
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  actions: read
+  packages: read
+
+concurrency:
+  group: render-production
+  cancel-in-progress: false
+
+jobs:
+  deploy-production:
+    name: Deploy verified image
+    runs-on: ubuntu-latest
+
+    environment: production
+
+    steps:
+      - name: Checkout repository
+      - uses: actions/checkout@v4
+      - with:
+        fetch-depth: 0
+
+      - name: Identify staged commit
+        id: candidate
+        run: |
+          set -euo pipefail
+
+          PARENTS=$(git rev-list --parents -n 1 "$GITHUB_SHA")
+
+          if [ "$(echo "$PARENTS" | wc -w)" -ge 3 ]; then
+            STAGING_SHA=$(echo "$PARENTS" | awk '{print $3}')
+          else
+            STAGING_SHA="$GITHUB_SHA"
+          fi
+
+          echo "Staging candidate: $STAGING_SHA"
+          echo "sha=$STAGING_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Find successful staging run
+        id: staging
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          RUN_ID=$(gh run list \
+            --workflow staging.yml \
+            --branch staging \
+            --commit "${{ steps.candidate.outputs.sha }}" \
+            --status success \
+            --json databaseId,headSha \
+            --jq ".[] | select(.headSha == \"${{ steps.candidate.outputs.sha }}\") | .databaseId" \
+            | head -n 1)
+
+          if [ -z "$RUN_ID" ]; then
+            echo "No successful staging validation found for ${{ steps.candidate.outputs.sha }}"
+            exit 1
+          fi
+
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download verified image
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ steps.staging.outputs.run_id }}
+        run: |
+          mkdir -p release
+
+          gh run download "$RUN_ID" \
+            --name verified-image \
+            --dir release
+
+      - name: Validate image reference
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          IMAGE_REF=$(cat release/image.txt)
+
+          PREFIX="ghcr.io/${GITHUB_REPOSITORY,,}@"
+
+          if [[ "$IMAGE_REF" != "$PREFIX"* ]]; then
+            echo "Unexpected image repository"
+            exit 1
+          fi
+
+          DIGEST="${IMAGE_REF#"$PREFIX"}"
+
+          if [[ ! "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]; then
+            echo "Invalid image digest"
+            exit 1
+          fi
+
+          echo "image=$IMAGE_REF" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Render production
+        id: deploy
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: ${{ vars.RENDER_PRODUCTION_SERVICE_ID }}
+          IMAGE: ${{ steps.image.outputs.image }}
+        run: |
+          set -euo pipefail
+
+          RESPONSE=$(curl --fail-with-body --silent --show-error \
+            -X POST \
+            "https://api.render.com/v1/services/$SERVICE_ID/deploys" \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg image "$IMAGE" '{imageUrl: $image}')")
+
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id')
+
+          if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" = "null" ]; then
+            echo "Could not retrieve deployment ID"
+            exit 1
+          fi
+
+          echo "deploy_id=$DEPLOY_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for production deployment
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: ${{ vars.RENDER_PRODUCTION_SERVICE_ID }}
+          DEPLOY_ID: ${{ steps.deploy.outputs.deploy_id }}
+        run: |
+          set -euo pipefail
+
+          for i in $(seq 1 60); do
+            RESPONSE=$(curl --fail-with-body --silent --show-error \
+              "https://api.render.com/v1/services/$SERVICE_ID/deploys/$DEPLOY_ID" \
+              -H "Authorization: Bearer $RENDER_API_KEY")
+
+            STATUS=$(echo "$RESPONSE" | jq -r '.status')
+
+            echo "Render status: $STATUS"
+
+            case "$STATUS" in
+              live)
+                echo "Production deployment is live"
+                exit 0
+                ;;
+              build_failed|update_failed|pre_deploy_failed|canceled|deactivated)
+                echo "Deployment failed: $STATUS"
+                exit 1
+                ;;
+            esac
+
+            sleep 10
+          done
+
+          echo "Production deployment timed out"
+          exit 1
+
+      - name: Production HTTP smoke test
+        env:
+          BASE_URL: ${{ vars.RENDER_PRODUCTION_URL }}
+        run: |
+          set -euo pipefail
+
+          ready=false
+
+          for i in $(seq 1 30); do
+            if curl --fail --silent --show-error \
+              "$BASE_URL/ready" \
+              | jq -e '.status == "ready"' >/dev/null; then
+              ready=true
+              break
+            fi
+            sleep 10
+          done
+
+          if [ "$ready" != true ]; then
+            echo "Production readiness check failed"
+            exit 1
+          fi
+
+          curl --fail --silent "$BASE_URL/" \
+            | grep -q 'Wine Quality Predictor'
+
+          curl --fail --silent --show-error \
+            "$BASE_URL/predict" \
+            -H 'Content-Type: application/json' \
+            -d '{"fixed_acidity":7.4,"volatile_acidity":0.70,"citric_acid":0.00,"residual_sugar":1.9,"chlorides":0.076,"free_sulfur_dioxide":11.0,"total_sulfur_dioxide":34.0,"density":0.9978,"pH":3.51,"sulphates":0.56,"alcohol":9.4,"is_red":1}' \
+            | jq -e '.quality != null and .model_version != null'
+
+          echo "Production smoke tests passed"
