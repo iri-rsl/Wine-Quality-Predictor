@@ -68,6 +68,8 @@ h2 { font-size: 1.35rem; margin: 0; color: var(--wine-dark); }
   color: var(--wine); margin: 1.1rem 0 .5rem;
 }
 .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; }
+.name-field { margin-bottom: .2rem; }
+.result-name { font-family: Fraunces, Georgia, serif; font-size: 1.25rem; color: var(--wine); margin-bottom: .3rem; }
 .field label { display: flex; justify-content: space-between; font-size: .85rem; font-weight: 500; margin-bottom: .3rem; }
 .unit { color: var(--muted); font-weight: 400; }
 input, select {

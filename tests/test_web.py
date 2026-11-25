@@ -22,8 +22,12 @@ def test_frontend_fields_match_api_schema(client):
     """Every feature the API expects has an input in the form (built by app.js)."""
     schema = client.get("/openapi.json").json()["components"]["schemas"]["WineFeatures"]["properties"]
     js = client.get("/static/app.js").text
+    html = client.get("/").text
     for feature in schema:
-        assert f'"{feature}"' in js or f"{feature}:" in js, feature
+        if feature == "wine_name":  # free-text input declared in index.html
+            assert 'name="wine_name"' in html
+        else:
+            assert f'"{feature}"' in js or f"{feature}:" in js, feature
 
 
 @pytest.mark.parametrize("path", ["/static/missing.js", "/static/../main.py"])
