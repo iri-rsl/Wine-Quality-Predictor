@@ -27,5 +27,9 @@ docker run --rm -d --name wine-quality `
   wine-quality-predictor:local
 ```
 
+## Staging and Production Deployment
+The deployment to staging and production environments is automated through GitHub Actions workflows.
+They are triggered by pushes to the `staging` and `production` branches, respectively. 
 
-
+*Staging deployment address: https://wine-quality-predictor-staging.onrender.com* <br/>
+*Production deployment address: https://wine-quality-predictor-v6hd.onrender.com*
